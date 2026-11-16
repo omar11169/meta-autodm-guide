@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta property="og:title" content="الرابط يوصل الخاص تلقائياً — @code.sheikh">
+<meta property="og:description" content="الشرح كامل: أتمتة الرد على التعليقات برسالة خاصة من Meta نفسها، مجاناً وبدون أدوات خارجية">
+<title>الرابط يوصل الخاص تلقائياً</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&family=Tajawal:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#0E0D0C; --panel:#171513; --line:#2A2622; --fg:#F3ECE3; --muted:#A39A8F;
+  --amber:#F7A21B; --deep:#D9700A; --ok:#3DDC84; --blue:#0866FF; --bad:#FF6B5E;
+  --display:'Cairo','Tajawal',system-ui,sans-serif; --body:'Tajawal',system-ui,sans-serif;
+  --mono:'JetBrains Mono',Consolas,'Courier New',monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:18px;line-height:1.75;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:44px 44px}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-direction:column;gap:14px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+.by{font-family:var(--mono);font-size:14px;color:var(--amber);direction:ltr;text-align:right}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(32px,7vw,52px);line-height:1.2;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--amber)}
+.lede{color:var(--muted);margin:0;max-width:60ch}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:15px;justify-content:flex-start}
+.flow span{padding:6px 14px;border:1.5px solid var(--line);border-radius:999px;background:var(--panel)}
+.flow i{color:var(--amber);font-style:normal}
+h2{font-family:var(--display);font-weight:700;font-size:24px;margin:0;text-wrap:balance}
+section{display:flex;flex-direction:column;gap:14px;padding-block:28px;border-bottom:1px solid var(--line)}
+.need{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.need div{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);min-width:0}
+.need b{display:block;font-family:var(--display);font-size:17px}
+.need small{color:var(--muted);font-size:15px}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:30px;counter-reset:s}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:48px 1fr;gap:16px}
+ol.steps>li::before{content:counter(s);width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:900;font-size:22px;color:#160d02;background:linear-gradient(180deg,#FFC25A,var(--amber))}
+.step{display:flex;flex-direction:column;gap:10px;min-width:0}
+.step h3{font-family:var(--display);font-size:21px;margin:8px 0 0}
+.step p{margin:0;color:var(--muted)}
+.path{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:15px}
+.path span{padding:4px 12px;border-radius:8px;background:var(--panel);border:1px solid var(--line);direction:ltr;unicode-bidi:isolate}
+.path i{color:var(--amber);font-style:normal}
+/* mock UI window */
+.win{border:1px solid var(--line);border-radius:14px;background:#0A0908;overflow:hidden}
+.bar{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted);direction:ltr}
+.bar b{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bar .u{margin-left:8px}
+.ui{padding:16px;display:flex;flex-direction:column;gap:12px;direction:ltr;text-align:left;font-size:15px}
+.ui .lbl{font-weight:700;font-size:14px}
+.ui .fld{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel);color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.ui .fld.rtl{direction:rtl;text-align:right;white-space:pre-line;color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:3px 10px;border-radius:8px;background:#26221E;color:var(--fg);font-size:14px}
+.chk{display:flex;gap:16px;flex-wrap:wrap}
+.chk span::before{content:"✓";display:inline-flex;width:18px;height:18px;margin-right:6px;border-radius:4px;background:var(--blue);color:#fff;font-size:12px;align-items:center;justify-content:center}
+.btns{display:flex;gap:8px;justify-content:flex-end}
+.btn{padding:6px 14px;border-radius:8px;border:1px solid var(--line);font-weight:700;font-size:14px}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.card{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+.card small{display:block;color:var(--muted);font-size:13px}
+.hl{outline:2px solid var(--amber);outline-offset:2px}
+/* copy block */
+.cmd{position:relative;border:1px solid var(--line);border-radius:14px;background:#0A0908;overflow:hidden}
+.cmd pre{margin:0;white-space:pre-wrap;direction:rtl;text-align:right;font-family:var(--body);font-size:16px;line-height:1.8;padding:52px 18px 18px;color:var(--fg)}
+.copy{position:absolute;top:10px;left:10px;font-family:var(--body);font-weight:700;font-size:14px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.copy:hover{border-color:var(--amber)}
+.copy:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.copy.done{color:var(--ok);border-color:var(--ok)}
+.fill{color:var(--amber)}
+/* result mock */
+.phone{max-width:340px;border:1px solid var(--line);border-radius:22px;background:#0A0908;padding:14px;display:flex;flex-direction:column;gap:10px}
+.cm{font-size:15px;color:var(--muted)}
+.cm b{color:var(--fg)}
+.bub{align-self:flex-start;max-width:85%;padding:10px 14px;border-radius:18px;background:#262626;font-size:15px;line-height:1.6;white-space:pre-line}
+.bub a{overflow-wrap:anywhere}
+.note{padding:14px 16px;border-radius:14px;border:1px solid rgba(247,162,27,.35);background:rgba(247,162,27,.07);font-size:16px}
+.note b{color:var(--amber)}
+.warn{border-color:rgba(255,107,94,.4);background:rgba(255,107,94,.07)}
+.warn b{color:var(--bad)}
+ul.tips{margin:0;padding-right:20px;display:flex;flex-direction:column;gap:8px;color:var(--muted)}
+ul.tips b{color:var(--fg)}
+.vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.vs div{padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.vs h3{margin:0 0 6px;font-family:var(--display);font-size:17px}
+.vs ul{margin:0;padding-right:18px;color:var(--muted);font-size:15px}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1px 6px;direction:ltr;unicode-bidi:isolate}
+a{color:var(--amber)}
+footer{padding-top:24px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:no-preference){.copy{transition:border-color .15s,color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap" dir="rtl">
+  <header>
+    <div class="by">@code.sheikh</div>
+    <h1>الرابط يوصل الخاص <em>تلقائياً</em></h1>
+    <p class="lede">المتابع يعلّق كلمة تحت الريل، ويوصله الرابط أو الشرح في الخاص على طول. كله من Meta نفسها: مجاناً، وبدون أي أداة خارجية تعرّض حسابك للتقييد.</p>
+    <div class="flow" aria-label="تعليق ثم Meta ثم رسالة خاصة"><span>💬 تعليق «مزايا»</span><i>←</i><span>Meta Business Suite</span><i>←</i><span>📩 رسالة خاصة</span></div>
+  </header>
+
+  <section>
+    <h2>وش تحتاج</h2>
+    <div class="need">
+      <div><b>حساب إنستقرام احترافي</b><small>Creator أو Business، ومربوط بصفحة فيسبوك</small></div>
+      <div><b>Meta Business Suite</b><small>من الكمبيوتر على <a href="https://business.facebook.com" target="_blank" rel="noopener">business.facebook.com</a></small></div>
+      <div><b>الرابط اللي تبي ترسله</b><small>صفحة شرح، برومبت، رابط تصويت، أي شي</small></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>الخطوات</h2>
+    <ol class="steps">
+      <li><div class="step">
+        <h3>افتح الـ Automations</h3>
+        <p>ادخل Business Suite من الكمبيوتر، واختار حسابك من فوق يسار.</p>
+        <div class="path"><span>Inbox</span><i>←</i><span>Automations</span></div>
+        <p>زر <b>Automations</b> موجود فوق في صفحة الـ Inbox.</p>
+      </div></li>
+
+      <li><div class="step">
+        <h3>اختار Comment to message</h3>
+        <p>تحت <b>Suggested for you</b> بتلقى «Comment to message». اضغط <b>Try it</b>.</p>
+        <div class="win" aria-hidden="true">
+          <div class="bar"><b style="background:#FF5F57"></b><b style="background:#FEBC2E"></b><b style="background:#28C840"></b><span class="u">business.facebook.com · Automations</span></div>
+          <div class="ui">
+            <div class="card hl"><div><b>Comment to message</b><small>Send a message reply to comments on your posts that contain specific keywords.</small></div><span class="btn">Try it</span></div>
+          </div>
+        </div>
+      </div></li>
+
+      <li><div class="step">
+        <h3>سمّها واختار القناة</h3>
+        <p>اكتب اسم يذكّرك بالريل (مثلاً «مزايا»)، وتأكد إن <b>Instagram</b> عليه صح.</p>
+        <div class="win" aria-hidden="true">
+          <div class="ui">
+            <div class="lbl">Name</div><div class="fld">Mazaya reel</div>
+            <div class="lbl">Channel</div><div class="chk"><span>Messenger</span><span>Instagram</span></div>
+          </div>
+        </div>
+      </div></li>
+
+      <li><div class="step">
+        <h3>اكتب الكلمة المفتاحية</h3>
+        <p>اكتب الكلمة واضغط Enter بعد كل وحدة. تقدر تحط لين 10 كلمات، فحط الكلمة بأشكالها المختلفة:</p>
+        <div class="win" aria-hidden="true">
+          <div class="ui">
+            <div class="lbl">Receives a comment that contains any of these keywords</div>
+            <div class="fld chips"><span class="chip">مزايا</span><span class="chip">مزايه</span><span class="chip">mazaya</span></div>
+          </div>
+        </div>
+      </div></li>
+
+      <li><div class="step">
+        <h3>اكتب الرسالة والرابط</h3>
+        <p>في خانة <b>Private message</b> (لين 1000 حرف) اكتب رسالتك وحط الرابط بسطر لحاله. انسخ هذا القالب وعدّله:</p>
+        <div class="cmd"><button class="copy" type="button">نسخ الرسالة</button><pre>هلا والله 👋
+هذا <span class="fill">[الشرح / الرابط]</span> اللي طلبته:
+<span class="fill">https://الرابط-هنا</span>
+
+احفظ الريل وتابع <span class="fill">@حسابك</span> عشان يوصلك الجديد 🔥</pre></div>
+        <p>وتحت في <b>Comment reply</b> غيّر الرد العام اللي ينكتب تحت التعليق:</p>
+        <div class="cmd"><button class="copy" type="button">نسخ الرد</button><pre>أرسلتلك في الخاص 📩🔥</pre></div>
+        <p>تقدر بعد تضيف صورة أو فيديو من <b>Add media</b> عشان الرسالة تطلع أحلى.</p>
+      </div></li>
+
+      <li><div class="step">
+        <h3>احفظ… وخلاص</h3>
+        <p>اضغط <b>Save changes</b>. بيطلع لك الأوتوميشن في «Your automations» وهو شغّال.</p>
+        <div class="win" aria-hidden="true"><div class="ui"><div class="btns"><span class="btn">Cancel</span><span class="btn pri hl">Save changes</span></div></div></div>
+      </div></li>
+
+      <li><div class="step">
+        <h3>جرّبه</h3>
+        <p>علّق الكلمة من <b>حساب ثاني</b> (حسابك نفسه ما يشغّلها). المفروض يوصل هذا:</p>
+        <div class="phone" aria-label="مثال على النتيجة">
+          <div class="cm"><b>متابع:</b> مزايا</div>
+          <div class="cm"><b>code.sheikh:</b> أرسلتلك في الخاص 📩🔥</div>
+          <div class="bub">هلا والله 👋
+هذا الشرح اللي طلبته:
+<a href="#" onclick="return false">https://الرابط-هنا</a></div>
+        </div>
+      </div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Meta ولا الأدوات الخارجية؟</h2>
+    <div class="vs">
+      <div><h3>✅ Meta Business Suite</h3><ul><li>مجاني</li><li>من Meta نفسها، فحسابك بأمان</li><li>رسالة + صورة + رد عام</li></ul></div>
+      <div><h3>⚠️ الأدوات الخارجية</h3><ul><li>فيها أزرار وشرط المتابعة</li><li>أغلبها مدفوع</li><li>أكثر من أداة مع بعض ممكن يقيّد حسابك</li></ul></div>
+    </div>
+    <div class="note warn"><b>من تجربتي:</b> شغّلت 3 أدوات أتمتة مع بعض على حسابي، وMeta قيّدت الإعلانات. شلتها كلها، طلبت مراجعة، ورجع الحساب. الدرس: أداة وحدة بس، والأفضل من Meta نفسها.</div>
+  </section>
+
+  <section>
+    <h2>نصايح</h2>
+    <ul class="tips">
+      <li><b>كلمة مختلفة لكل ريل.</b> الكلمة تشتغل على كل بوستاتك، فاختار كلمة ما تنكتب بالصدفة (مثل «مزايا» مو «حلو»).</li>
+      <li><b>اكتب الكلمة بأشكالها:</b> مع وبدون تشكيل، بالعربي والإنجليزي.</li>
+      <li><b>الرسالة قصيرة والرابط بسطر لحاله.</b> إنستقرام يحوله لكرت تقدر تضغطه.</li>
+      <li><b>ما فيه شرط متابعة.</b> كل اللي يعلّق يوصله، متابع أو لا.</li>
+      <li><b>ما لقيت Comment to message؟</b> Meta تفعّلها تدريجياً. استخدم «Custom keywords»: خلّ المتابع يرسل الكلمة في الخاص بدل التعليق.</li>
+    </ul>
+    <div class="note"><b>تعليق «أتمتة»</b> على الريل هو اللي أوصلك هنا، بنفس الطريقة اللي شرحتها 😉 تابعني عشان توصلك الشروحات الجاية 👋</div>
+  </section>
+
+  <footer>
+    <div>جرّبها بنفسك: <a href="https://business.facebook.com" target="_blank" rel="noopener">business.facebook.com</a></div>
+    <div dir="ltr" style="text-align:right">@code.sheikh — تقنية • أجهزة • ذكاء اصطناعي</div>
+  </footer>
+</div>
+<script>
+document.querySelectorAll('.copy').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var pre=btn.parentElement.querySelector('pre');var txt=pre.innerText;var label=btn.textContent;
+    function ok(){btn.textContent='تم النسخ ✓';btn.classList.add('done');setTimeout(function(){btn.textContent=label;btn.classList.remove('done')},1600)}
+    function fallback(){var r=document.createRange();r.selectNodeContents(pre);var s=getSelection();s.removeAllRanges();s.addRange(r);btn.textContent='حدّد وانسخ'}
+    try{navigator.clipboard.writeText(txt).then(ok,fallback)}catch(e){fallback()}
+  });
+});
+</script>
+</body>
+</html>
